@@ -80,7 +80,7 @@ def ptb_raw_data(data_path=None):
   return train_data, valid_data, test_data, vocabulary
 
 
-def ptb_iterator(raw_data, batch_size, num_steps, epoch_size_override=None):
+def ptb_iterator(raw_data, batch_size, sequence_length, epoch_size_override=None):
   """Iterate on the raw PTB data.
 
   This generates batch_size pointers into the raw PTB data, and allows
@@ -89,7 +89,7 @@ def ptb_iterator(raw_data, batch_size, num_steps, epoch_size_override=None):
   Args:
     raw_data: one of the raw data outputs from ptb_raw_data.
     batch_size: int, the batch size.
-    num_steps: int, the number of unrolls. sequence_size
+    sequence_length: int, the number of unrolls. sequence_size
 
   Yields:
     Pairs of the batched data, each a matrix of shape [batch_size, num_steps].
@@ -110,14 +110,22 @@ def ptb_iterator(raw_data, batch_size, num_steps, epoch_size_override=None):
   if epoch_size_override:
     epoch_size = epoch_size_override
   else:
-    epoch_size = (batch_len - 1) // num_steps
+    epoch_size = (batch_len - 1) // sequence_length
 
   if epoch_size == 0:
     raise ValueError("epoch_size == 0, decrease batch_size or num_steps")
 
   # print("Number of batches per epoch: %d" % epoch_size)
   for i in range(epoch_size):
-    x = data[:, i * num_steps:(i + 1) * num_steps]
-    y = data[:, i * num_steps + 1:(i + 1) * num_steps + 1]
+    x = data[:, i * sequence_length:(i + 1) * sequence_length]
+    y = data[:, i * sequence_length + 1:(i + 1) * sequence_length + 1]
     w = np.ones_like(x)
     yield (x, y, w)
+
+
+if __name__ == '__main__':
+  # raw_data = ptb_raw_data('/Users/xi/Downloads/ptb/')
+  raw_data = ptb_raw_data('/home/chenxi410402/tmp/ptb')
+  iterator = ptb_iterator(raw_data, 10, 20)
+  for x, y, _ in iterator:
+    print(x)
