@@ -138,6 +138,11 @@ if __name__ == '__main__':
   data_path = '/Users/xi/Downloads/ptb/'
   train_path = os.path.join(data_path, "ptb.train.txt")
   word_to_id = build_vocab(train_path)
+  raw_data = _file_to_word_ids(train_path, word_to_id)
+  raw_data = np.array(raw_data, dtype=np.int32)
+  sentences = np.split(raw_data, np.where(raw_data == EOS_INDEX)[0] + 1)
+  lengths = [len(sent) for sent in sentences]
+  print(np.mean(lengths))
 
   # path = '/home/chenxi410402/tmp/ptb'
   # train_data, valid_data, test_data, vocabulary = ptb_raw_data(path)
