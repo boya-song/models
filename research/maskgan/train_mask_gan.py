@@ -228,7 +228,8 @@ def create_hparams():
         gen_nas_keep_prob_0=0.85,
         gen_nas_keep_prob_1=0.55,
         dis_nas_keep_prob_0=0.85,
-        dis_nas_keep_prob_1=0.55)
+        dis_nas_keep_prob_1=0.55,
+	gen_pretrain_learning_rate=0.005)
     # Command line flags override any of the preceding hyperparameter values.
     if FLAGS.hparams:
         hparams = hparams.parse(FLAGS.hparams)
@@ -336,11 +337,11 @@ def create_MaskGAN(hparams, is_training):
 
     # Pre-training.
     if FLAGS.gen_pretrain_steps:
-        raise NotImplementedError
+        #raise NotImplementedError
         # # TODO(liamfedus): Rewrite this.
-        # fwd_cross_entropy_loss = tf.reduce_mean(fwd_cross_entropy_losses)
-        # gen_pretrain_op = model_optimization.create_gen_pretrain_op(
-        #     hparams, fwd_cross_entropy_loss, global_step)
+        fwd_cross_entropy_loss = tf.reduce_mean(fake_cross_entropy_losses)
+        gen_pretrain_op = model_optimization.create_gen_pretrain_op(
+            hparams, fwd_cross_entropy_loss, global_step)
     else:
         gen_pretrain_op = None
     if FLAGS.dis_pretrain_steps:
