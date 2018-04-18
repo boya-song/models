@@ -27,15 +27,17 @@ import numpy as np
 import tensorflow as tf
 
 EOS_INDEX = 0
+PAD_INDEX = 0
 
 
 def _read_words(filename):
   with tf.gfile.GFile(filename, "r") as f:
-    return f.read().replace("\n", "<eos>").split()
+    return f.read().replace("\n", " <eos> <pad>").split()
 
 
 def build_vocab(filename):
   data = _read_words(filename)
+  # print(data)
 
   counter = collections.Counter(data)
   count_pairs = sorted(counter.items(), key=lambda x: (-x[1], x[0]))
@@ -43,8 +45,11 @@ def build_vocab(filename):
   words, _ = list(zip(*count_pairs))
   word_to_id = dict(zip(words, range(len(words))))
   print("<eos>:", word_to_id["<eos>"])
+  print("<pad>:", word_to_id["<pad>"])
   global EOS_INDEX
+  global PAD_INDEX
   EOS_INDEX = word_to_id["<eos>"]
+  PAD_INDEX = word_to_id["<pad>"]
 
   return word_to_id
 
@@ -100,32 +105,45 @@ def ptb_iterator(raw_data, batch_size, sequence_length, epoch_size_override=None
     ValueError: if batch_size or num_steps are too high.
   """
   raw_data = np.array(raw_data, dtype=np.int32)
-
-  data_len = len(raw_data)
-  batch_len = data_len // batch_size
-  data = np.full([batch_size, batch_len], EOS_INDEX, dtype=np.int32)
-  for i in range(batch_size):
-    data[i] = raw_data[batch_len * i:batch_len * (i + 1)]
+  # print('raw_data', len(raw_data))
+  sentences = np.split(raw_data, np.where(raw_data == EOS_INDEX)[0] + 1)
+  sentences = np.array(list(filter(lambda x: len(x)>8, sentences)))
+  sentence_len = len(sentences)
+  # print('sentence_len', sentence_len)
+  data = np.full([sentence_len, sequence_length+1], PAD_INDEX, dtype=np.int32)
+  for i in range(sentence_len):
+    sent = sentences[i][:sequence_length+1]
+    data[i][:len(sent)] = sent
 
   if epoch_size_override:
-    epoch_size = epoch_size_override
-  else:
-    epoch_size = (batch_len - 1) // sequence_length
+    raise NotImplementedError
 
-  if epoch_size == 0:
-    raise ValueError("epoch_size == 0, decrease batch_size or num_steps")
-
-  # print("Number of batches per epoch: %d" % epoch_size)
+  epoch_size = sentence_len//batch_size
+  # print('epoch_size', epoch_size)
   for i in range(epoch_size):
-    x = data[:, i * sequence_length:(i + 1) * sequence_length]
-    y = data[:, i * sequence_length + 1:(i + 1) * sequence_length + 1]
+    x = data[i*batch_size:(i+1)*batch_size, :-1]
+    y = data[i*batch_size:(i+1)*batch_size, 1:]
     w = np.ones_like(x)
+    # print("for loop")
+    # print(y)
+    # print(x)
+    # print('x.shape', x.shape)
+    # print(w)
     yield (x, y, w)
 
 
+
 if __name__ == '__main__':
-  # raw_data = ptb_raw_data('/Users/xi/Downloads/ptb/')
-  raw_data = ptb_raw_data('/home/chenxi410402/tmp/ptb')
-  iterator = ptb_iterator(raw_data, 10, 20)
-  for x, y, _ in iterator:
-    print(x)
+#   data_path = '/home/chenxi410402/tmp/ptb'
+  data_path = '/Users/xi/Downloads/ptb/'
+  train_path = os.path.join(data_path, "ptb.train.txt")
+  word_to_id = build_vocab(train_path)
+
+  # path = '/home/chenxi410402/tmp/ptb'
+  # train_data, valid_data, test_data, vocabulary = ptb_raw_data(path)
+  # word_to_id = build_vocab()
+  # iterator = ptb_iterator(train_data, 10, 20)
+  # for x, y, _ in iterator:
+  #   print(x)
+  #   print(y)
+  #   break
