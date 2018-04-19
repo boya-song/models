@@ -882,7 +882,7 @@ def evaluate_once(data, sv, model, sess, train_dir, log, id_to_word,
     """
     tf.logging.info('Evaluate Once.')
     # Load the last model checkpoint, or initialize the graph.
-    model_save_path = tf.latest_checkpoint(train_dir)
+    model_save_path = tf.train.latest_checkpoint(train_dir)
     if not model_save_path:
         tf.logging.warning('No checkpoint yet in: %s', train_dir)
         return
@@ -987,6 +987,11 @@ def evaluate_once(data, sv, model, sess, train_dir, log, id_to_word,
         log.write(' percent of %d-grams captured: %.3f.\n' %
                   (n, n_gram_percent))
 
+    geometric_avg = compute_geometric_average(avg_percent_captured)
+    log.write(' geometric_avg: %.3f.' % geometric_avg)
+    arithmetic_avg = compute_arithmetic_average(avg_percent_captured)
+    log.write(' geometric_avg: %.3f.' % arithmetic_avg)
+
     samples = evaluation_utils.generate_logs(sess, model, log, id_to_word,
                                              eval_feed)
 
@@ -1010,7 +1015,6 @@ def evaluate_once(data, sv, model, sess, train_dir, log, id_to_word,
         sv.SummaryComputed(sess, summary_percent_str, global_step=step)
 
     # Summary:  geometric_avg
-    geometric_avg = compute_geometric_average(avg_percent_captured)
     summary_geometric_avg_str = tf.Summary(value=[
         tf.Summary.Value(tag='general/geometric_avg',
                          simple_value=geometric_avg)
@@ -1018,7 +1022,6 @@ def evaluate_once(data, sv, model, sess, train_dir, log, id_to_word,
     sv.SummaryComputed(sess, summary_geometric_avg_str, global_step=step)
 
     # Summary:  arithmetic_avg
-    arithmetic_avg = compute_arithmetic_average(avg_percent_captured)
     summary_arithmetic_avg_str = tf.Summary(value=[
         tf.Summary.Value(
             tag='general/arithmetic_avg', simple_value=arithmetic_avg)
@@ -1044,8 +1047,6 @@ def evaluate_model(hparams, data, train_dir, log, id_to_word,
       data_ngram_counts: Dictionary of hashed(n-gram tuples) to counts in the
         data_set.
     """
-    tf.logging.error('Evaluate model.')
-
     # Boolean indicating operational mode.
     is_training = False
 
@@ -1086,18 +1087,11 @@ def evaluate_model(hparams, data, train_dir, log, id_to_word,
             evaluation_variables = tf.trainable_variables()
             evaluation_variables.append(model.global_step)
             eval_saver = tf.train.Saver(var_list=evaluation_variables)
-            sv = tf.Supervisor(logdir=logdir)
+            sv = tf.train.Supervisor(logdir=logdir)
             sess = sv.PrepareSession(
                 FLAGS.eval_master, start_standard_services=False)
-
-            tf.logging.info('Before sv.Loop.')
-            sv.Loop(FLAGS.eval_interval_secs, evaluate_once,
-                    (data, sv, model, sess, train_dir, log, id_to_word,
-                     data_ngram_counts, eval_saver))
-
-            sv.WaitForStop()
-            tf.logging.info('sv.Stop().')
-            sv.Stop()
+            evaluate_once(data, sv, model, sess, train_dir, log, id_to_word,
+                     data_ngram_counts, eval_saver)
 
 
 def main(_):
