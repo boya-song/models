@@ -81,7 +81,7 @@ def get_iterator(data):
     return iterator
 
 
-def convert_to_human_readable(id_to_word, arr, p, max_num_to_print):
+def convert_to_human_readable(id_to_word, arr, max_num_to_print, p=None):
     """Convert a np.array of indices into words using id_to_word dictionary.
     Return max_num_to_print results.
     """
@@ -89,13 +89,15 @@ def convert_to_human_readable(id_to_word, arr, p, max_num_to_print):
     assert arr.ndim == 2
 
     samples = []
-    for sequence_id in xrange(min(len(arr), max_num_to_print)):
+    for sequence_id in range(min(len(arr), max_num_to_print)):
         sample = []
         for i, index in enumerate(arr[sequence_id, :]):
-            if p[sequence_id, i] == 1:
-                sample.append(str(id_to_word[index]))
-            else:
+            if index == ptb_loader.PAD_INDEX:
+                continue
+            if p and p[sequence_id, i] != 1:
                 sample.append('*' + str(id_to_word[index]))
+            else:
+                sample.append(str(id_to_word[index]))
         buffer_str = ' '.join(sample)
         samples.append(buffer_str)
     return samples
@@ -104,7 +106,7 @@ def convert_to_human_readable(id_to_word, arr, p, max_num_to_print):
 def write_unmasked_log(log, id_to_word, sequence_eval):
     """Helper function for logging evaluated sequences without mask."""
     indices_arr = np.asarray(sequence_eval)
-    samples = helper.convert_to_human_readable(id_to_word, indices_arr,
+    samples = convert_to_human_readable(id_to_word, indices_arr,
                                                FLAGS.batch_size)
     for sample in samples:
         log.write(sample + '\n\n')
@@ -114,8 +116,8 @@ def write_unmasked_log(log, id_to_word, sequence_eval):
 
 def write_masked_log(log, id_to_word, sequence_eval, present_eval):
     indices_arr = np.asarray(sequence_eval)
-    samples = convert_to_human_readable(id_to_word, indices_arr, present_eval,
-                                        FLAGS.batch_size)
+    samples = convert_to_human_readable(id_to_word, indices_arr,
+                                        FLAGS.batch_size, present_eval)
     for sample in samples:
         log.write(sample + '\n\n')
     log.flush()
