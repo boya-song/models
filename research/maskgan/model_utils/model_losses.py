@@ -319,7 +319,7 @@ def calculate_log_perplexity(logits, targets, present):
   weights = 1. - weights
   weights = tf.reshape(weights, [-1])
   targets = tf.reshape(targets, [-1])
-
+  # todo if targets[i] == 3, weights[i] = 1?0
   num_missing = tf.reduce_sum(weights)
   # print("targets", targets.shape)
   # assert targets.shape==weights.shape
@@ -328,5 +328,4 @@ def calculate_log_perplexity(logits, targets, present):
       [logits], [targets], [weights])
 
   avg_log_perplexity = tf.reduce_sum(log_perplexity) / (num_missing + eps)
-  # return avg_log_perplexity
-  return 0
+  return avg_log_perplexity
