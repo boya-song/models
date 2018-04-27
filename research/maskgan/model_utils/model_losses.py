@@ -319,7 +319,7 @@ def calculate_log_perplexity(logits, targets, present):
   weights = tf.reshape(weights, [-1])
   targets = tf.reshape(targets, [-1])
   # todo if targets[i] == 3, weights[i] = 1?0
-  weights = tf.where(tf.not_equal(targets,3.0),x=weights,y=tf.zeros_like(targets),name=None)
+  weights = tf.where(tf.not_equal(targets,3),x=weights,y=tf.zeros_like(targets),name=None)
   # weights = tf.where(tf.not_equal(targets,3.0),x=weights,y=tf.ones_like(targets),name=None)
   weights = tf.cast(weights, tf.float32)
   weights = 1. - weights
