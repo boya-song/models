@@ -59,6 +59,9 @@ def percent_unique_ngrams_in_train(train_ngrams_dict, gen_ngrams_dict):
   for _, value in gen_ngrams_dict.items():
     total_ngrams_produced += value
 
+  if not total_ngrams_produced:
+    return 0
+
   # The unique ngrams in the training set.
   unique_ngrams_in_train = 0.
 
