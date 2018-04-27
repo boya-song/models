@@ -320,6 +320,13 @@ def calculate_log_perplexity(logits, targets, present):
   weights = tf.reshape(weights, [-1])
   targets = tf.reshape(targets, [-1])
   # todo if targets[i] == 3, weights[i] = 1?0
+  # weights = tf.where(
+  #   condition,
+  #   x=weights,
+  #   y=1,
+  #   name=None
+  # )
+
   num_missing = tf.reduce_sum(weights)
   # print("targets", targets.shape)
   # assert targets.shape==weights.shape
