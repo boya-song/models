@@ -33,12 +33,14 @@ def find_all_ngrams(dataset, n):
   return zip(*[dataset[i:] for i in xrange(n)])
 
 
-def construct_ngrams_dict(ngrams_list):
+def construct_ngrams_dict(ngrams_list, escape=3):
   """Construct a ngram dictionary which maps an ngram tuple to the number
   of times it appears in the text."""
   counts = {}
 
   for t in ngrams_list:
+    if t[0] == escape:
+      continue
     key = hash_function(t)
     if key in counts:
       counts[key] += 1

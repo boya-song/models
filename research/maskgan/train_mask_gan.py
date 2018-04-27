@@ -935,11 +935,17 @@ def evaluate_once(data, sv, model, sess, train_dir, log, id_to_word,
             for i, (c, h) in enumerate(model.eval_initial_state):
                 eval_feed[c] = gen_initial_state_eval[i].c
                 eval_feed[h] = gen_initial_state_eval[i].h
+                # print("eval_initial_state")
+                # print(eval_feed[c])
+                # print(eval_feed[h])
 
             # Statefulness for the Generator.
             for i, (c, h) in enumerate(model.fake_gen_initial_state):
                 eval_feed[c] = fake_gen_initial_state_eval[i].c
                 eval_feed[h] = fake_gen_initial_state_eval[i].h
+                # print("fake_gen_initial_state")
+                # print(eval_feed[c])
+                # print(eval_feed[h])
 
         [
             gen_log_perplexity_eval, dis_loss_eval, gen_loss_eval,
