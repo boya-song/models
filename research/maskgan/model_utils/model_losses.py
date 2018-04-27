@@ -320,7 +320,8 @@ def calculate_log_perplexity(logits, targets, present):
   weights = tf.reshape(weights, [-1])
   num_missing = tf.reduce_sum(weights)
   targets = tf.reshape(targets, [-1])
-  print("targets", targets.shape)
+  # print("targets", targets.shape)
+  assert targets.shape==weights.shape
 
   log_perplexity = tf.contrib.legacy_seq2seq.sequence_loss_by_example(
       [logits], [targets], [weights])
