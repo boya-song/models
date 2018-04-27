@@ -315,12 +315,14 @@ def calculate_log_perplexity(logits, targets, present):
   logits = tf.reshape(logits, [-1, FLAGS.vocab_size])
 
   # Only calculate log-perplexity on missing tokens.
-  weights = tf.cast(present, tf.float32)
-  weights = 1. - weights
+  weights = tf.cast(present, tf.int32)
   weights = tf.reshape(weights, [-1])
   targets = tf.reshape(targets, [-1])
   # todo if targets[i] == 3, weights[i] = 1?0
-  weights = tf.where(tf.not_equal(targets,3),x=weights,y=tf.ones_like(targets),name=None)
+  weights = tf.where(tf.not_equal(targets,3.0),x=weights,y=tf.zeros_like(targets),name=None)
+  # weights = tf.where(tf.not_equal(targets,3.0),x=weights,y=tf.ones_like(targets),name=None)
+  weights = tf.cast(weights, tf.float32)
+  weights = 1. - weights
 
   num_missing = tf.reduce_sum(weights)
   # print("targets", targets.shape)
